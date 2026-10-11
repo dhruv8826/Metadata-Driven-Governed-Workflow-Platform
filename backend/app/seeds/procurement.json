@@ -1,0 +1,297 @@
+{
+  "tenant": {
+    "id": "procurement",
+    "name": "Procurement Operations",
+    "description": "Enterprise procurement and vendor management workflows"
+  },
+  "personas": [
+    {"id": "alice_req", "name": "Alice Johnson", "role": "Requester"},
+    {"id": "bob_mgr", "name": "Bob Martinez", "role": "Manager"},
+    {"id": "carol_dir", "name": "Carol Danvers", "role": "Director"},
+    {"id": "dave_fin", "name": "Dave Sterling", "role": "Finance"},
+    {"id": "admin_proc", "name": "System Admin", "role": "Admin"}
+  ],
+  "objects": [
+    {
+      "object_type": "vendor",
+      "label": "Vendor",
+      "description": "Approved organizational vendors and suppliers",
+      "schema_definition": [
+        {"name": "name", "label": "Vendor Name", "type": "text", "required": true, "display_order": 1},
+        {"name": "code", "label": "Vendor Code", "type": "text", "required": true, "display_order": 2},
+        {"name": "contact_email", "label": "Contact Email", "type": "text", "required": false, "display_order": 3}
+      ],
+      "validation_rules": []
+    },
+    {
+      "object_type": "purchase_request",
+      "label": "Purchase Request",
+      "description": "Formal requests to purchase goods or software",
+      "schema_definition": [
+        {"name": "amount", "label": "Amount ($)", "type": "number", "required": true, "display_order": 1},
+        {"name": "needed_by", "label": "Needed By Date", "type": "date", "required": true, "display_order": 2},
+        {"name": "justification", "label": "Business Justification", "type": "text", "required": true, "display_order": 3},
+        {
+          "name": "vendor_id",
+          "label": "Vendor",
+          "type": "reference",
+          "required": true,
+          "reference_target": "vendor",
+          "display_order": 4
+        },
+        {"name": "cost_centre", "label": "Cost Centre Code", "type": "text", "required": false, "display_order": 5}
+      ],
+      "validation_rules": [
+        {
+          "rule_name": "positive_amount",
+          "expression": {"field": "amount", "operator": ">", "value": 0},
+          "error_message": "Purchase request amount must be greater than zero."
+        }
+      ]
+    }
+  ],
+  "lifecycles": [
+    {
+      "object_type": "purchase_request",
+      "initial_state": "Draft",
+      "states": ["Draft", "Submitted", "Approved", "Rejected", "Ordered"],
+      "transitions": [
+        {
+          "name": "submit",
+          "label": "Submit Request",
+          "from_state": "Draft",
+          "to_state": "Submitted",
+          "allowed_roles": ["Requester"],
+          "requires_approval": true,
+          "approval_routing": {
+            "rule": {
+              "condition": {"field": "amount", "operator": ">", "value": 5000},
+              "role_if_true": "Director",
+              "role_if_false": "Manager"
+            }
+          }
+        },
+        {
+          "name": "order",
+          "label": "Place Order",
+          "from_state": "Approved",
+          "to_state": "Ordered",
+          "allowed_roles": ["Finance", "Manager"],
+          "requires_approval": false
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "object_type": "vendor",
+      "role": "Requester",
+      "can_create": true, "can_read": true, "can_update": false, "can_delete": false,
+      "field_permissions": {
+        "name": {"read": true, "edit": true},
+        "code": {"read": true, "edit": true},
+        "contact_email": {"read": true, "edit": true}
+      },
+      "transition_permissions": [],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "vendor",
+      "role": "Manager",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": false,
+      "field_permissions": {
+        "name": {"read": true, "edit": true},
+        "code": {"read": true, "edit": true},
+        "contact_email": {"read": true, "edit": true}
+      },
+      "transition_permissions": [],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "vendor",
+      "role": "Director",
+      "can_create": false, "can_read": true, "can_update": false, "can_delete": false,
+      "field_permissions": {
+        "name": {"read": true, "edit": false},
+        "code": {"read": true, "edit": false},
+        "contact_email": {"read": true, "edit": false}
+      },
+      "transition_permissions": [],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "vendor",
+      "role": "Finance",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": false,
+      "field_permissions": {
+        "name": {"read": true, "edit": true},
+        "code": {"read": true, "edit": true},
+        "contact_email": {"read": true, "edit": true}
+      },
+      "transition_permissions": [],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "vendor",
+      "role": "Admin",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": true,
+      "field_permissions": {
+        "name": {"read": true, "edit": true},
+        "code": {"read": true, "edit": true},
+        "contact_email": {"read": true, "edit": true}
+      },
+      "transition_permissions": [],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "purchase_request",
+      "role": "Requester",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": false,
+      "field_permissions": {
+        "amount": {"read": true, "edit": true},
+        "needed_by": {"read": true, "edit": true},
+        "justification": {"read": true, "edit": true},
+        "vendor_id": {"read": true, "edit": true},
+        "cost_centre": {"read": false, "edit": false}
+      },
+      "transition_permissions": ["submit"],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "purchase_request",
+      "role": "Manager",
+      "can_create": false, "can_read": true, "can_update": false, "can_delete": false,
+      "field_permissions": {
+        "amount": {"read": true, "edit": false},
+        "needed_by": {"read": true, "edit": false},
+        "justification": {"read": true, "edit": false},
+        "vendor_id": {"read": true, "edit": false},
+        "cost_centre": {"read": false, "edit": false}
+      },
+      "transition_permissions": ["order"],
+      "approval_permissions": ["submit"]
+    },
+    {
+      "object_type": "purchase_request",
+      "role": "Director",
+      "can_create": false, "can_read": true, "can_update": false, "can_delete": false,
+      "field_permissions": {
+        "amount": {"read": true, "edit": false},
+        "needed_by": {"read": true, "edit": false},
+        "justification": {"read": true, "edit": false},
+        "vendor_id": {"read": true, "edit": false},
+        "cost_centre": {"read": false, "edit": false}
+      },
+      "transition_permissions": [],
+      "approval_permissions": ["submit"]
+    },
+    {
+      "object_type": "purchase_request",
+      "role": "Finance",
+      "can_create": false, "can_read": true, "can_update": true, "can_delete": false,
+      "field_permissions": {
+        "amount": {"read": true, "edit": false},
+        "needed_by": {"read": true, "edit": false},
+        "justification": {"read": true, "edit": false},
+        "vendor_id": {"read": true, "edit": false},
+        "cost_centre": {"read": true, "edit": true}
+      },
+      "transition_permissions": ["order"],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "purchase_request",
+      "role": "Admin",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": true,
+      "field_permissions": {
+        "amount": {"read": true, "edit": true},
+        "needed_by": {"read": true, "edit": true},
+        "justification": {"read": true, "edit": true},
+        "vendor_id": {"read": true, "edit": true},
+        "cost_centre": {"read": true, "edit": true}
+      },
+      "transition_permissions": ["submit", "order"],
+      "approval_permissions": ["submit"]
+    }
+  ],
+  "dashboards": [
+    {
+      "id": "procurement_overview",
+      "title": "Procurement Analytics & Governance",
+      "widgets": [
+        {
+          "widget_id": "kpi_total_requests",
+          "title": "Total Purchase Requests",
+          "type": "kpi",
+          "object_type": "purchase_request",
+          "metric": {"agg": "count"}
+        },
+        {
+          "widget_id": "chart_spend_by_state",
+          "title": "Total Spend by Lifecycle State ($)",
+          "type": "chart",
+          "object_type": "purchase_request",
+          "metric": {"agg": "sum", "field": "amount"},
+          "group_by": "state"
+        },
+        {
+          "widget_id": "table_recent_requests",
+          "title": "Recent Requests Feed",
+          "type": "table",
+          "object_type": "purchase_request",
+          "limit": 5
+        }
+      ]
+    }
+  ],
+  "records": [
+    {
+      "id": "vendor_acme",
+      "object_type": "vendor",
+      "state": "Active",
+      "created_by": "admin_proc",
+      "data": {
+        "name": "Acme Industrial Supplies",
+        "code": "VEND-ACME-01",
+        "contact_email": "orders@acmeindustrial.com"
+      }
+    },
+    {
+      "id": "vendor_apex",
+      "object_type": "vendor",
+      "state": "Active",
+      "created_by": "admin_proc",
+      "data": {
+        "name": "Apex Cloud Systems",
+        "code": "VEND-APEX-02",
+        "contact_email": "billing@apexcloud.io"
+      }
+    },
+    {
+      "id": "pr_small_101",
+      "object_type": "purchase_request",
+      "state": "Draft",
+      "created_by": "alice_req",
+      "data": {
+        "amount": 3200,
+        "needed_by": "2026-11-01",
+        "justification": "Replacement monitors and ergonomic keyboards for team",
+        "vendor_id": "vendor_acme",
+        "cost_centre": "CC-ENG-402"
+      }
+    },
+    {
+      "id": "pr_large_102",
+      "object_type": "purchase_request",
+      "state": "Draft",
+      "created_by": "alice_req",
+      "data": {
+        "amount": 14500,
+        "needed_by": "2026-11-15",
+        "justification": "Annual enterprise cloud server reserved instances",
+        "vendor_id": "vendor_apex",
+        "cost_centre": "CC-INFRA-801"
+      }
+    }
+  ]
+}

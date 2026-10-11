@@ -1,0 +1,275 @@
+{
+  "tenant": {
+    "id": "facilities",
+    "name": "Facilities & Maintenance",
+    "description": "Building operations, equipment maintenance, and facility safety"
+  },
+  "personas": [
+    {"id": "tom_tech", "name": "Tom Bradley", "role": "Technician"},
+    {"id": "laura_lead", "name": "Laura Chen", "role": "Facilities Lead"},
+    {"id": "admin_fac", "name": "Facilities Admin", "role": "Admin"}
+  ],
+  "objects": [
+    {
+      "object_type": "asset",
+      "label": "Facility Asset",
+      "description": "Physical buildings, machinery, and HVAC equipment",
+      "schema_definition": [
+        {"name": "name", "label": "Asset Name", "type": "text", "required": true, "display_order": 1},
+        {"name": "location", "label": "Building / Floor Location", "type": "text", "required": true, "display_order": 2},
+        {"name": "category", "label": "Asset Category", "type": "text", "required": false, "display_order": 3}
+      ],
+      "validation_rules": []
+    },
+    {
+      "object_type": "maintenance_job",
+      "label": "Maintenance Job",
+      "description": "Scheduled preventative maintenance or reactive emergency repairs",
+      "schema_definition": [
+        {
+          "name": "priority",
+          "label": "Urgency / Priority",
+          "type": "select",
+          "options": ["Low", "Medium", "High", "Emergency"],
+          "required": true,
+          "display_order": 1
+        },
+        {"name": "scheduled_start", "label": "Scheduled Start Date", "type": "date", "required": true, "display_order": 2},
+        {"name": "scheduled_end", "label": "Scheduled End Date", "type": "date", "required": true, "display_order": 3},
+        {
+          "name": "asset_id",
+          "label": "Target Asset",
+          "type": "reference",
+          "required": true,
+          "reference_target": "asset",
+          "display_order": 4
+        },
+        {"name": "estimated_cost", "label": "Estimated Cost ($)", "type": "number", "required": true, "display_order": 5}
+      ],
+      "validation_rules": [
+        {
+          "rule_name": "end_date_after_start_date",
+          "expression": {
+            "field": "scheduled_end",
+            "operator": ">=",
+            "field_compare": "scheduled_start"
+          },
+          "error_message": "Scheduled end date must be on or after scheduled start date."
+        }
+      ]
+    }
+  ],
+  "lifecycles": [
+    {
+      "object_type": "maintenance_job",
+      "initial_state": "Reported",
+      "states": ["Reported", "Scheduled", "In Progress", "Done", "Cancelled"],
+      "transitions": [
+        {
+          "name": "schedule_job",
+          "label": "Schedule Maintenance",
+          "from_state": "Reported",
+          "to_state": "Scheduled",
+          "allowed_roles": ["Technician", "Facilities Lead"],
+          "requires_approval": true,
+          "skip_approval_rule": {
+            "field": "priority",
+            "operator": "==",
+            "value": "Emergency"
+          },
+          "approval_routing": {
+            "rule": {
+              "condition": {"field": "estimated_cost", "operator": ">", "value": 2000},
+              "role_if_true": "Facilities Lead",
+              "role_if_false": "Facilities Lead"
+            }
+          }
+        },
+        {
+          "name": "start_work",
+          "label": "Commence Work",
+          "from_state": "Scheduled",
+          "to_state": "In Progress",
+          "allowed_roles": ["Technician", "Facilities Lead"],
+          "requires_approval": false
+        },
+        {
+          "name": "complete_job",
+          "label": "Mark Completed",
+          "from_state": "In Progress",
+          "to_state": "Done",
+          "allowed_roles": ["Technician", "Facilities Lead"],
+          "requires_approval": false
+        },
+        {
+          "name": "cancel_job",
+          "label": "Cancel Job",
+          "from_state": "Reported",
+          "to_state": "Cancelled",
+          "allowed_roles": ["Facilities Lead"],
+          "requires_approval": false
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "object_type": "asset",
+      "role": "Technician",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": false,
+      "field_permissions": {
+        "name": {"read": true, "edit": true},
+        "location": {"read": true, "edit": true},
+        "category": {"read": true, "edit": true}
+      },
+      "transition_permissions": [],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "asset",
+      "role": "Facilities Lead",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": true,
+      "field_permissions": {
+        "name": {"read": true, "edit": true},
+        "location": {"read": true, "edit": true},
+        "category": {"read": true, "edit": true}
+      },
+      "transition_permissions": [],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "asset",
+      "role": "Admin",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": true,
+      "field_permissions": {
+        "name": {"read": true, "edit": true},
+        "location": {"read": true, "edit": true},
+        "category": {"read": true, "edit": true}
+      },
+      "transition_permissions": [],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "maintenance_job",
+      "role": "Technician",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": false,
+      "field_permissions": {
+        "priority": {"read": true, "edit": true},
+        "scheduled_start": {"read": true, "edit": true},
+        "scheduled_end": {"read": true, "edit": true},
+        "asset_id": {"read": true, "edit": true},
+        "estimated_cost": {"read": false, "edit": false}
+      },
+      "transition_permissions": ["schedule_job", "start_work", "complete_job"],
+      "approval_permissions": []
+    },
+    {
+      "object_type": "maintenance_job",
+      "role": "Facilities Lead",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": true,
+      "field_permissions": {
+        "priority": {"read": true, "edit": true},
+        "scheduled_start": {"read": true, "edit": true},
+        "scheduled_end": {"read": true, "edit": true},
+        "asset_id": {"read": true, "edit": true},
+        "estimated_cost": {"read": true, "edit": true}
+      },
+      "transition_permissions": ["schedule_job", "start_work", "complete_job", "cancel_job"],
+      "approval_permissions": ["schedule_job"]
+    },
+    {
+      "object_type": "maintenance_job",
+      "role": "Admin",
+      "can_create": true, "can_read": true, "can_update": true, "can_delete": true,
+      "field_permissions": {
+        "priority": {"read": true, "edit": true},
+        "scheduled_start": {"read": true, "edit": true},
+        "scheduled_end": {"read": true, "edit": true},
+        "asset_id": {"read": true, "edit": true},
+        "estimated_cost": {"read": true, "edit": true}
+      },
+      "transition_permissions": ["schedule_job", "start_work", "complete_job", "cancel_job"],
+      "approval_permissions": ["schedule_job"]
+    }
+  ],
+  "dashboards": [
+    {
+      "id": "facilities_overview",
+      "title": "Facilities Maintenance Health",
+      "widgets": [
+        {
+          "widget_id": "kpi_active_jobs",
+          "title": "Total Maintenance Jobs",
+          "type": "kpi",
+          "object_type": "maintenance_job",
+          "metric": {"agg": "count"}
+        },
+        {
+          "widget_id": "chart_jobs_by_priority",
+          "title": "Jobs by Priority Level",
+          "type": "chart",
+          "object_type": "maintenance_job",
+          "metric": {"agg": "count"},
+          "group_by": "priority"
+        },
+        {
+          "widget_id": "table_jobs_feed",
+          "title": "Active Jobs Tracker",
+          "type": "table",
+          "object_type": "maintenance_job",
+          "limit": 5
+        }
+      ]
+    }
+  ],
+  "records": [
+    {
+      "id": "asset_ahu_02",
+      "object_type": "asset",
+      "state": "Operational",
+      "created_by": "admin_fac",
+      "data": {
+        "name": "Air Handling Unit AHU-02",
+        "location": "Building A - Rooftop East",
+        "category": "HVAC"
+      }
+    },
+    {
+      "id": "asset_lift_01",
+      "object_type": "asset",
+      "state": "Operational",
+      "created_by": "admin_fac",
+      "data": {
+        "name": "Freight Elevator B",
+        "location": "Warehouse Core 1",
+        "category": "Vertical Transport"
+      }
+    },
+    {
+      "id": "job_emerg_201",
+      "object_type": "maintenance_job",
+      "state": "Reported",
+      "created_by": "tom_tech",
+      "data": {
+        "priority": "Emergency",
+        "scheduled_start": "2026-10-12",
+        "scheduled_end": "2026-10-12",
+        "asset_id": "asset_ahu_02",
+        "estimated_cost": 4200
+      }
+    },
+    {
+      "id": "job_high_202",
+      "object_type": "maintenance_job",
+      "state": "Reported",
+      "created_by": "tom_tech",
+      "data": {
+        "priority": "High",
+        "scheduled_start": "2026-10-15",
+        "scheduled_end": "2026-10-16",
+        "asset_id": "asset_lift_01",
+        "estimated_cost": 3100
+      }
+    }
+  ]
+}
