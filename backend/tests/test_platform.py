@@ -307,3 +307,138 @@ def test_audit_log_captures_denied_actions(client):
     assert len(denied_entries) > 0
     # Verifies outcome is DENIED
     assert any(e["outcome"] == "DENIED" for e in denied_entries)
+
+# -------------------------------------------------------------
+# 9. ONE SAVE / READ FLOW (MANDATORY REQUIREMENT)
+# -------------------------------------------------------------
+def test_save_read_flow(client):
+    """
+    Mandatory Test: One complete save and read flow.
+    1. Create record -> 2. Read back and verify -> 3. Update record -> 4. Read back and verify version bump & audit diff.
+    """
+    # 1. Create a Vendor
+    create_res = client.post(
+        "/api/records/vendor",
+        headers={"X-Tenant-Id": "procurement", "X-Persona-Role": "Admin", "X-Persona-Id": "admin_proc"},
+        json={
+            "data": {
+                "name": "Global Tech Logistics",
+                "code": "VEND-GTL-99",
+                "contact_email": "support@gtl.com"
+            }
+        }
+    )
+    assert create_res.status_code == 200
+    vendor = create_res.json()
+    vendor_id = vendor["id"]
+    assert vendor["version"] == 1
+    assert vendor["data"]["code"] == "VEND-GTL-99"
+
+    # 2. Read back
+    read_res = client.get(
+        f"/api/records/vendor/{vendor_id}",
+        headers={"X-Tenant-Id": "procurement", "X-Persona-Role": "Finance", "X-Persona-Id": "dave_fin"}
+    )
+    assert read_res.status_code == 200
+    read_vendor = read_res.json()
+    assert read_vendor["data"]["name"] == "Global Tech Logistics"
+    assert read_vendor["data"]["contact_email"] == "support@gtl.com"
+
+    # 3. Update record
+    update_res = client.put(
+        f"/api/records/vendor/{vendor_id}",
+        headers={"X-Tenant-Id": "procurement", "X-Persona-Role": "Admin", "X-Persona-Id": "admin_proc"},
+        json={
+            "data": {
+                "contact_email": "billing@gtl.com"
+            }
+        }
+    )
+    assert update_res.status_code == 200
+    updated_vendor = update_res.json()
+    assert updated_vendor["version"] == 2
+    assert updated_vendor["data"]["contact_email"] == "billing@gtl.com"
+
+    # 4. Read back updated and check version history
+    detail_res = client.get(
+        f"/api/records/vendor/{vendor_id}",
+        headers={"X-Tenant-Id": "procurement", "X-Persona-Role": "Finance", "X-Persona-Id": "dave_fin"}
+    )
+    assert detail_res.status_code == 200
+    detail = detail_res.json()
+    assert detail["version"] == 2
+    assert detail["data"]["contact_email"] == "billing@gtl.com"
+    assert len(detail["versions"]) == 2
+
+# -------------------------------------------------------------
+# 10. EDGE CASE: CROSS-TENANT REFERENCE REJECTION
+# -------------------------------------------------------------
+def test_cross_tenant_reference_rejected(client):
+    """
+    Edge Case: A reference pointing to a record that sits in another tenant
+    must be immediately rejected with 422 Unprocessable Entity.
+    """
+    res = client.post(
+        "/api/records/purchase_request",
+        headers={"X-Tenant-Id": "procurement", "X-Persona-Role": "Requester", "X-Persona-Id": "alice_req"},
+        json={
+            "data": {
+                "amount": 2500,
+                "needed_by": "2026-11-20",
+                "justification": "Cross-tenant reference attempt",
+                "vendor_id": "asset_ahu_02"  # Exists in facilities tenant, NOT procurement!
+            }
+        }
+    )
+    assert res.status_code == 422
+    assert "does not exist within the active tenant" in res.json()["detail"]
+
+# -------------------------------------------------------------
+# 11. CHECKBOX & CONDITIONAL VISIBILITY FIELD PERSISTENCE
+# -------------------------------------------------------------
+def test_checkbox_field_persistence(client):
+    """
+    Validates checkbox and conditionally visible fields can be created and queried.
+    """
+    res = client.post(
+        "/api/records/maintenance_job",
+        headers={"X-Tenant-Id": "facilities", "X-Persona-Role": "Facilities Lead", "X-Persona-Id": "laura_lead"},
+        json={
+            "data": {
+                "priority": "High",
+                "scheduled_start": "2026-11-01",
+                "scheduled_end": "2026-11-02",
+                "asset_id": "asset_ahu_02",
+                "estimated_cost": 3000,
+                "requires_permit": True,
+                "permit_reference": "SAFETY-PERMIT-2026-08"
+            }
+        }
+    )
+    assert res.status_code == 200
+    job = res.json()
+    assert job["data"]["requires_permit"] is True
+    assert job["data"]["permit_reference"] == "SAFETY-PERMIT-2026-08"
+
+# -------------------------------------------------------------
+# 12. ADMIN METADATA LIFECYCLE & PERMISSIONS ENDPOINTS
+# -------------------------------------------------------------
+def test_admin_metadata_endpoints(client):
+    """
+    Validates admin endpoints for lifecycles and permissions configuration.
+    """
+    # 1. Fetch lifecycle
+    res_lc = client.get(
+        "/api/metadata/lifecycles/purchase_request",
+        headers={"X-Tenant-Id": "procurement", "X-Persona-Role": "Admin", "X-Persona-Id": "admin_proc"}
+    )
+    assert res_lc.status_code == 200
+    assert res_lc.json()["initial_state"] == "Draft"
+
+    # 2. Fetch permissions matrix
+    res_perms = client.get(
+        "/api/metadata/permissions/purchase_request",
+        headers={"X-Tenant-Id": "procurement", "X-Persona-Role": "Admin", "X-Persona-Id": "admin_proc"}
+    )
+    assert res_perms.status_code == 200
+    assert len(res_perms.json()) > 0

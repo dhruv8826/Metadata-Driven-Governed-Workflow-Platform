@@ -278,7 +278,19 @@ export default function RecordDetail({ objectMeta, recordId, onBack }) {
                       {field.label}
                     </span>
                     <span className="text-sm text-white font-medium">
-                      {val !== undefined && val !== null ? String(val) : (
+                      {field.type === "checkbox" ? (
+                        val ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            Yes
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                            No
+                          </span>
+                        )
+                      ) : val !== undefined && val !== null ? (
+                        String(val)
+                      ) : (
                         <span className="text-slate-500 italic">Not set</span>
                       )}
                     </span>

@@ -48,6 +48,20 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
     }
   };
 
+  const isFieldVisible = (field) => {
+    if (!field.conditional_visibility) return true;
+    const { field: depField, operator, value: targetVal } = field.conditional_visibility;
+    const currentVal = formData[depField];
+    if (operator === "==" || operator === "eq") return currentVal === targetVal;
+    if (operator === "!=" || operator === "ne") return currentVal !== targetVal;
+    if (operator === ">") return Number(currentVal) > Number(targetVal);
+    if (operator === ">=") return Number(currentVal) >= Number(targetVal);
+    if (operator === "<") return Number(currentVal) < Number(targetVal);
+    if (operator === "<=") return Number(currentVal) <= Number(targetVal);
+    if (operator === "truthy") return Boolean(currentVal);
+    return true;
+  };
+
   return (
     <div className="glass-card rounded-xl p-6 border border-slate-800">
       <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-800">
@@ -84,6 +98,7 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {editableFields.map((field) => {
+            if (!isFieldVisible(field)) return null;
             const value = formData[field.name] ?? "";
 
             return (
@@ -94,16 +109,18 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
                   {field.label}
                   {field.required && <span className="text-rose-400 ml-1">*</span>}
+                  {field.read_only && <span className="text-slate-500 ml-1 text-[10px]">(Read-only)</span>}
                 </label>
 
                 {field.type === "text" && (
                   <input
                     type="text"
                     required={field.required}
+                    disabled={field.read_only}
                     value={value}
                     onChange={(e) => handleChange(field.name, e.target.value)}
                     placeholder={`Enter ${field.label.toLowerCase()}`}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
                   />
                 )}
 
@@ -112,10 +129,11 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                     type="number"
                     step="any"
                     required={field.required}
+                    disabled={field.read_only}
                     value={value}
                     onChange={(e) => handleChange(field.name, parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
                   />
                 )}
 
@@ -123,18 +141,36 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                   <input
                     type="date"
                     required={field.required}
+                    disabled={field.read_only}
                     value={value}
                     onChange={(e) => handleChange(field.name, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
                   />
+                )}
+
+                {field.type === "checkbox" && (
+                  <div className="flex items-center gap-2 pt-1.5">
+                    <input
+                      type="checkbox"
+                      id={`field_${field.name}`}
+                      disabled={field.read_only}
+                      checked={Boolean(formData[field.name])}
+                      onChange={(e) => handleChange(field.name, e.target.checked)}
+                      className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-50"
+                    />
+                    <label htmlFor={`field_${field.name}`} className="text-xs text-slate-300 cursor-pointer select-none">
+                      {field.placeholder || `Enable ${field.label}`}
+                    </label>
+                  </div>
                 )}
 
                 {field.type === "select" && (
                   <select
                     required={field.required}
+                    disabled={field.read_only}
                     value={value}
                     onChange={(e) => handleChange(field.name, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
                   >
                     <option value="">Select an option</option>
                     {(field.options || []).map((opt) => (
@@ -148,9 +184,10 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                 {field.type === "reference" && (
                   <select
                     required={field.required}
+                    disabled={field.read_only}
                     value={value}
                     onChange={(e) => handleChange(field.name, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
                   >
                     <option value="">Select {field.label}</option>
                     {(referenceOptions[field.name] || []).map((refRec) => {

@@ -44,7 +44,26 @@
           "reference_target": "asset",
           "display_order": 4
         },
-        {"name": "estimated_cost", "label": "Estimated Cost ($)", "type": "number", "required": true, "display_order": 5}
+        {"name": "estimated_cost", "label": "Estimated Cost ($)", "type": "number", "required": true, "display_order": 5},
+        {
+          "name": "requires_permit",
+          "label": "Requires Safety Permit",
+          "type": "checkbox",
+          "required": false,
+          "display_order": 6
+        },
+        {
+          "name": "permit_reference",
+          "label": "Permit Document #",
+          "type": "text",
+          "required": false,
+          "conditional_visibility": {
+            "field": "requires_permit",
+            "operator": "==",
+            "value": true
+          },
+          "display_order": 7
+        }
       ],
       "validation_rules": [
         {
@@ -158,7 +177,9 @@
         "scheduled_start": {"read": true, "edit": true},
         "scheduled_end": {"read": true, "edit": true},
         "asset_id": {"read": true, "edit": true},
-        "estimated_cost": {"read": false, "edit": false}
+        "estimated_cost": {"read": false, "edit": false},
+        "requires_permit": {"read": true, "edit": true},
+        "permit_reference": {"read": true, "edit": true}
       },
       "transition_permissions": ["schedule_job", "start_work", "complete_job"],
       "approval_permissions": []
@@ -172,7 +193,9 @@
         "scheduled_start": {"read": true, "edit": true},
         "scheduled_end": {"read": true, "edit": true},
         "asset_id": {"read": true, "edit": true},
-        "estimated_cost": {"read": true, "edit": true}
+        "estimated_cost": {"read": true, "edit": true},
+        "requires_permit": {"read": true, "edit": true},
+        "permit_reference": {"read": true, "edit": true}
       },
       "transition_permissions": ["schedule_job", "start_work", "complete_job", "cancel_job"],
       "approval_permissions": ["schedule_job"]
@@ -186,7 +209,9 @@
         "scheduled_start": {"read": true, "edit": true},
         "scheduled_end": {"read": true, "edit": true},
         "asset_id": {"read": true, "edit": true},
-        "estimated_cost": {"read": true, "edit": true}
+        "estimated_cost": {"read": true, "edit": true},
+        "requires_permit": {"read": true, "edit": true},
+        "permit_reference": {"read": true, "edit": true}
       },
       "transition_permissions": ["schedule_job", "start_work", "complete_job", "cancel_job"],
       "approval_permissions": ["schedule_job"]

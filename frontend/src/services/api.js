@@ -44,6 +44,36 @@ export const api = {
     if (!res.ok) throw new Error(data.detail || "Failed to save metadata");
     return data;
   },
+  getMetadataLifecycle: async (objectType) => {
+    const res = await fetch(`${API_BASE}/metadata/lifecycles/${objectType}`, { headers: getHeaders() });
+    if (!res.ok) throw new Error((await res.json()).detail || "Failed to load lifecycle");
+    return res.json();
+  },
+  saveMetadataLifecycle: async (payload) => {
+    const res = await fetch(`${API_BASE}/metadata/lifecycles`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed to save lifecycle");
+    return data;
+  },
+  getMetadataPermissions: async (objectType) => {
+    const res = await fetch(`${API_BASE}/metadata/permissions/${objectType}`, { headers: getHeaders() });
+    if (!res.ok) throw new Error((await res.json()).detail || "Failed to load permissions");
+    return res.json();
+  },
+  saveMetadataPermissions: async (payload) => {
+    const res = await fetch(`${API_BASE}/metadata/permissions`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed to save permissions");
+    return data;
+  },
 
   // Records CRUD
   getRecords: async (objectType, params = {}) => {

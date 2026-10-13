@@ -198,3 +198,186 @@ def save_metadata_object(
         "version": new_version,
         "change_reason": payload.change_reason
     }
+
+class LifecyclePayload(BaseModel):
+    object_type: str
+    initial_state: str
+    states: List[str]
+    transitions: List[Dict[str, Any]]
+    change_reason: str = Field(..., min_length=10)
+
+@router.get("/lifecycles/{object_type}")
+def get_metadata_lifecycle(
+    object_type: str,
+    ctx: RequestContext = Depends(get_request_context),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT initial_state, states, transitions, version
+        FROM metadata_lifecycles
+        WHERE tenant_id = ? AND object_type = ?;
+    """, (ctx.tenant_id, object_type))
+    row = cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"No lifecycle defined for '{object_type}'")
+    return {
+        "object_type": object_type,
+        "initial_state": row["initial_state"],
+        "states": json.loads(row["states"]),
+        "transitions": json.loads(row["transitions"]),
+        "version": row["version"]
+    }
+
+@router.post("/lifecycles")
+def save_metadata_lifecycle(
+    payload: LifecyclePayload,
+    ctx: RequestContext = Depends(get_request_context),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    if ctx.actor_role != "Admin":
+        raise HTTPException(status_code=403, detail="Admin role required for lifecycle updates")
+
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT version FROM metadata_lifecycles
+        WHERE tenant_id = ? AND object_type = ?;
+    """, (ctx.tenant_id, payload.object_type))
+    existing = cursor.fetchone()
+
+    if existing:
+        new_version = existing["version"] + 1
+        cursor.execute("""
+            UPDATE metadata_lifecycles
+            SET initial_state = ?, states = ?, transitions = ?, version = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE tenant_id = ? AND object_type = ?;
+        """, (
+            payload.initial_state,
+            json.dumps(payload.states),
+            json.dumps(payload.transitions),
+            new_version,
+            ctx.tenant_id,
+            payload.object_type
+        ))
+    else:
+        new_version = 1
+        cursor.execute("""
+            INSERT INTO metadata_lifecycles (
+                id, tenant_id, object_type, initial_state, states, transitions, version
+            ) VALUES (?, ?, ?, ?, ?, ?, 1);
+        """, (
+            f"{ctx.tenant_id}_{payload.object_type}_lc",
+            ctx.tenant_id,
+            payload.object_type,
+            payload.initial_state,
+            json.dumps(payload.states),
+            json.dumps(payload.transitions)
+        ))
+
+    AuditService.log(
+        db, ctx.tenant_id, ctx.actor_id, ctx.actor_role,
+        action="LIFECYCLE_UPDATE", outcome="SUCCESS",
+        object_type=payload.object_type, reason=payload.change_reason
+    )
+    db.commit()
+
+    return {
+        "status": "SUCCESS",
+        "object_type": payload.object_type,
+        "version": new_version,
+        "change_reason": payload.change_reason
+    }
+
+class PermissionRowPayload(BaseModel):
+    role: str
+    can_create: bool
+    can_read: bool
+    can_update: bool
+    can_delete: bool
+    field_permissions: Dict[str, Dict[str, bool]]
+    transition_permissions: Optional[List[str]] = []
+    approval_permissions: Optional[List[str]] = []
+
+class PermissionsUpdatePayload(BaseModel):
+    object_type: str
+    permissions: List[PermissionRowPayload]
+    change_reason: str = Field(..., min_length=10)
+
+@router.get("/permissions/{object_type}")
+def get_metadata_permissions(
+    object_type: str,
+    ctx: RequestContext = Depends(get_request_context),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT role, can_create, can_read, can_update, can_delete,
+               field_permissions, transition_permissions, approval_permissions
+        FROM metadata_permissions
+        WHERE tenant_id = ? AND object_type = ?;
+    """, (ctx.tenant_id, object_type))
+    rows = cursor.fetchall()
+    return [
+        {
+            "role": r["role"],
+            "can_create": bool(r["can_create"]),
+            "can_read": bool(r["can_read"]),
+            "can_update": bool(r["can_update"]),
+            "can_delete": bool(r["can_delete"]),
+            "field_permissions": json.loads(r["field_permissions"]),
+            "transition_permissions": json.loads(r["transition_permissions"] or "[]"),
+            "approval_permissions": json.loads(r["approval_permissions"] or "[]")
+        }
+        for r in rows
+    ]
+
+@router.post("/permissions")
+def save_metadata_permissions(
+    payload: PermissionsUpdatePayload,
+    ctx: RequestContext = Depends(get_request_context),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    if ctx.actor_role != "Admin":
+        raise HTTPException(status_code=403, detail="Admin role required for permissions updates")
+
+    cursor = db.cursor()
+    for p in payload.permissions:
+        cursor.execute("""
+            INSERT INTO metadata_permissions (
+                id, tenant_id, object_type, role,
+                can_create, can_read, can_update, can_delete,
+                field_permissions, transition_permissions, approval_permissions
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (tenant_id, object_type, role) DO UPDATE SET
+                can_create = excluded.can_create,
+                can_read = excluded.can_read,
+                can_update = excluded.can_update,
+                can_delete = excluded.can_delete,
+                field_permissions = excluded.field_permissions,
+                transition_permissions = excluded.transition_permissions,
+                approval_permissions = excluded.approval_permissions;
+        """, (
+            f"{ctx.tenant_id}_{payload.object_type}_{p.role}",
+            ctx.tenant_id, payload.object_type, p.role,
+            1 if p.can_create else 0,
+            1 if p.can_read else 0,
+            1 if p.can_update else 0,
+            1 if p.can_delete else 0,
+            json.dumps(p.field_permissions),
+            json.dumps(p.transition_permissions or []),
+            json.dumps(p.approval_permissions or [])
+        ))
+
+    AuditService.log(
+        db, ctx.tenant_id, ctx.actor_id, ctx.actor_role,
+        action="PERMISSIONS_UPDATE", outcome="SUCCESS",
+        object_type=payload.object_type, reason=payload.change_reason
+    )
+    db.commit()
+
+    return {
+        "status": "SUCCESS",
+        "object_type": payload.object_type,
+        "roles_updated": len(payload.permissions),
+        "change_reason": payload.change_reason
+    }

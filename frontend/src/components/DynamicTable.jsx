@@ -161,7 +161,17 @@ export default function DynamicTable({ objectMeta, onSelectRecord, onCreateRecor
                       const val = rec.data?.[f.name];
                       return (
                         <td key={f.name} className="py-3.5 px-4 text-slate-200">
-                          {val !== undefined && val !== null ? String(val) : "—"}
+                          {f.type === "checkbox" ? (
+                            val ? (
+                              <span className="text-emerald-400 font-semibold text-[11px]">Yes</span>
+                            ) : (
+                              <span className="text-slate-500 text-[11px]">No</span>
+                            )
+                          ) : val !== undefined && val !== null ? (
+                            String(val)
+                          ) : (
+                            "—"
+                          )}
                         </td>
                       );
                     })}

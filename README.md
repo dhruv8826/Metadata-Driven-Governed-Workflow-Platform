@@ -120,6 +120,10 @@ PYTHONPATH=backend ./backend/venv/bin/pytest backend/tests/test_platform.py -v
 | `test_emergency_skips_approval_in_facilities` | 'Emergency' priority maintenance job bypasses approval | **PASSED** |
 | `test_dashboard_no_leakage` | Restricted metric fields return `RESTRICTED` status without leaking numbers | **PASSED** |
 | `test_audit_log_captures_denied_actions` | Unauthorized attempts are logged in `audit_log` with `outcome='DENIED'` | **PASSED** |
+| `test_save_read_flow` | Complete CRUD flow: Create -> Read -> Update -> Read -> Version history verification | **PASSED** |
+| `test_cross_tenant_reference_rejected` | Cross-tenant reference injection rejected with `422 Unprocessable Entity` | **PASSED** |
+| `test_checkbox_field_persistence` | Dynamic boolean/checkbox fields and conditional visibility attributes persisted | **PASSED** |
+| `test_admin_metadata_endpoints` | Administration studio endpoints for dynamic lifecycles and role permissions matrix | **PASSED** |
 
 ---
 
