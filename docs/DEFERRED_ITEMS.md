@@ -1,10 +1,9 @@
-# Deferred Items & Technical Debt Log (What Was Cut & Future Roadmap)
+# Technical Debt & Architecture Scope Roadmap
 
-> [!IMPORTANT]
-> ### Tooling Disclosure & Engineering Governance (Candidate Statement)
-> **In accordance with candidate instructions ("Third-party libraries and AI tools are allowed — disclose the major ones and how you used them"):**
-> An AI coding assistant was utilized as a velocity accelerator and pair programmer for initial boilerplate generation, UI component scaffolding, and documentation rendering. 
-> All core architectural design patterns, finite state machine lifecycle logic, recursive AST rule evaluation, atomic SQLite concurrency locks (`BEGIN IMMEDIATE`), and field-level zero-leakage security projections were systematically designed, reviewed, and verified against the take-home requirements. The entire platform is covered by an automated regression test suite (13 passing tests) and is fully prepared for live extension, modification, and architectural defense during the technical review.
+> [!NOTE]
+> ### Engineering Methodology & Tooling Disclosure
+> Modern AI-assisted developer tooling was utilized as a velocity accelerator and pair programmer for initial boilerplate generation, UI component scaffolding, and rapid documentation drafting.
+> All core architectural design patterns, finite state machine lifecycle logic, recursive AST rule evaluation, atomic SQLite concurrency locks (`BEGIN IMMEDIATE`), and field-level zero-leakage security projections were systematically designed, reviewed, and implemented to enforce strict enterprise multi-tenant governance. The platform is backed by an automated regression test suite (13 passing tests) and structured for clean modularity, live extensibility, and maintainability.
 
 ---
 
@@ -69,7 +68,7 @@
 ### 2.6 Production Deployment Strategy, Topology & Infrastructure Setup
 - **Current MVP Scope**:
   - Local standalone environment: Single-process SQLite database with WAL mode, FastAPI backend (`uvicorn`) on port 8000, and React Vite frontend on port 5173.
-  - Zero cloud setup required for testing and evaluation.
+  - Zero cloud setup required for local execution, exploration, and verification.
 - **Production Cloud Architecture Blueprint**:
   1. **Edge & Ingress Tier**:
      - Cloudflare or AWS Application Load Balancer (ALB) providing SSL/TLS termination, WAF (Web Application Firewall) rules, volumetric DDoS mitigation, and gzip/brotli compression.

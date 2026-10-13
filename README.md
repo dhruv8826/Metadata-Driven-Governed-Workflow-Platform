@@ -102,7 +102,7 @@ Open your browser at `http://localhost:5173`.
 
 ## 3. Running Automated Tests
 
-Run the test suite verifying all requirements:
+Run the platform regression test suite:
 ```bash
 cd "Metadata-Driven Governed Workflow Platform"
 PYTHONPATH=backend ./backend/venv/bin/pytest backend/tests/test_platform.py -v
@@ -165,4 +165,4 @@ The system seeds and runs two business domains using declarative JSON configurat
 ## 5. Documentation Structure
 - [**docs/HLSD.md**](docs/HLSD.md): High-Level System Design (Component separation, sequence diagrams, audit logging).
 - [**docs/LLD.md**](docs/LLD.md): Low-Level Design (Database DDLs, AST rule syntax, atomic SQLite concurrency locks, edge cases).
-- [**docs/DEFERRED_ITEMS.md**](docs/DEFERRED_ITEMS.md): "What I Cut and Why" note detailing deferred items, scale bottlenecks, and roadmap.
+- [**docs/DEFERRED_ITEMS.md**](docs/DEFERRED_ITEMS.md): Architecture scope decisions, technical debt log, scale bottlenecks, and future roadmap.
