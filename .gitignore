@@ -19,3 +19,10 @@ dist-ssr/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Keys & Sensitive files
+eval*
+*.key
+id_ed25519*
+id_rsa*
+

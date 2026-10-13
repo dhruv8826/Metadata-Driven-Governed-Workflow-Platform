@@ -35,19 +35,6 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setSubmitting(true);
-    try {
-      await onSubmit(formData);
-    } catch (err) {
-      setError(err.message || "Failed to submit form");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const isFieldVisible = (field) => {
     if (!field.conditional_visibility) return true;
     const { field: depField, operator, value: targetVal } = field.conditional_visibility;
@@ -62,23 +49,36 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
     return true;
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      await onSubmit(formData);
+    } catch (err) {
+      setError(err.message || "Failed to submit form");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="glass-card rounded-xl p-6 border border-slate-800">
-      <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-800">
+    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+      <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200">
         <div>
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-bold text-slate-900">
             {initialData && Object.keys(initialData).length > 0
               ? `Edit ${objectMeta.label}`
               : `New ${objectMeta.label}`}
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Rendered dynamically from schema metadata (v{objectMeta.version})
           </p>
         </div>
         {onCancel && (
           <button
             onClick={onCancel}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -86,11 +86,11 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-600" />
           <div>
-            <p className="font-semibold">Validation & Rule Guardrail Error</p>
-            <p className="text-xs mt-0.5 text-rose-300">{error}</p>
+            <p className="font-semibold text-rose-800">Validation & Rule Guardrail Error</p>
+            <p className="text-xs mt-0.5 text-rose-700">{error}</p>
           </div>
         </div>
       )}
@@ -106,10 +106,10 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                 key={field.name}
                 className={field.type === "text" && field.name === "justification" ? "md:col-span-2" : ""}
               >
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   {field.label}
-                  {field.required && <span className="text-rose-400 ml-1">*</span>}
-                  {field.read_only && <span className="text-slate-500 ml-1 text-[10px]">(Read-only)</span>}
+                  {field.required && <span className="text-rose-500 ml-1">*</span>}
+                  {field.read_only && <span className="text-slate-400 ml-1 text-[10px] font-normal">(Read-only)</span>}
                 </label>
 
                 {field.type === "text" && (
@@ -120,7 +120,7 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                     value={value}
                     onChange={(e) => handleChange(field.name, e.target.value)}
                     placeholder={`Enter ${field.label.toLowerCase()}`}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-all disabled:bg-slate-50 disabled:text-slate-400"
                   />
                 )}
 
@@ -133,7 +133,7 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                     value={value}
                     onChange={(e) => handleChange(field.name, parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-all disabled:bg-slate-50 disabled:text-slate-400"
                   />
                 )}
 
@@ -144,7 +144,7 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                     disabled={field.read_only}
                     value={value}
                     onChange={(e) => handleChange(field.name, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-all disabled:bg-slate-50 disabled:text-slate-400"
                   />
                 )}
 
@@ -156,9 +156,9 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                       disabled={field.read_only}
                       checked={Boolean(formData[field.name])}
                       onChange={(e) => handleChange(field.name, e.target.checked)}
-                      className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-50"
+                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer disabled:opacity-50"
                     />
-                    <label htmlFor={`field_${field.name}`} className="text-xs text-slate-300 cursor-pointer select-none">
+                    <label htmlFor={`field_${field.name}`} className="text-xs text-slate-700 font-medium cursor-pointer select-none">
                       {field.placeholder || `Enable ${field.label}`}
                     </label>
                   </div>
@@ -170,7 +170,7 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                     disabled={field.read_only}
                     value={value}
                     onChange={(e) => handleChange(field.name, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-all disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer"
                   >
                     <option value="">Select an option</option>
                     {(field.options || []).map((opt) => (
@@ -187,7 +187,7 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
                     disabled={field.read_only}
                     value={value}
                     onChange={(e) => handleChange(field.name, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-all disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer"
                   >
                     <option value="">Select {field.label}</option>
                     {(referenceOptions[field.name] || []).map((refRec) => {
@@ -206,12 +206,12 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
           })}
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-200">
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-800 transition-colors"
+              className="px-4 py-2 rounded-lg text-sm text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm font-medium"
             >
               Cancel
             </button>
@@ -219,7 +219,7 @@ export default function DynamicForm({ objectMeta, initialData = {}, onSubmit, on
           <button
             type="submit"
             disabled={submitting}
-            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold text-white shadow-sm transition-all disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             {submitting ? "Saving..." : "Save Record"}

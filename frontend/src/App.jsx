@@ -15,7 +15,6 @@ import {
   Shield,
   Settings,
   FolderKanban,
-  FileText,
 } from "lucide-react";
 
 export default function App() {
@@ -101,26 +100,26 @@ export default function App() {
   const currentRole = localStorage.getItem("active_persona_role") || "Requester";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col antialiased">
       {/* 1. Context Switcher Header */}
       <ContextSwitcher onContextChange={handleContextChange} />
 
       {/* 2. Main Navigation Bar (Domain Agnostic) */}
-      <nav className="glass-panel border-b border-slate-800 px-6 py-2">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <nav className="bg-white border-b border-slate-200 px-6 py-2.5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 max-w-7xl mx-auto w-full">
           {/* Dynamic Entity Links derived completely from metadata */}
-          <div className="flex items-center gap-1 overflow-x-auto">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mr-2 flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5" /> Entities:
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-2 flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5 text-indigo-600" /> Entities:
             </span>
             {objects.map((obj) => (
               <button
                 key={obj.object_type}
                 onClick={() => handleSelectObject(obj.object_type)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                   activeTab === "records" && selectedObjectType === obj.object_type
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                    : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <FolderKanban className="w-3.5 h-3.5" />
@@ -133,10 +132,10 @@ export default function App() {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setActiveTab("dashboard")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === "dashboard"
-                  ? "bg-slate-800 text-indigo-400 border border-slate-700"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                  ? "bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
               }`}
             >
               <BarChart3 className="w-3.5 h-3.5" />
@@ -145,16 +144,16 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab("approvals")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 relative ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 relative ${
                 activeTab === "approvals"
-                  ? "bg-slate-800 text-amber-400 border border-slate-700"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                  ? "bg-amber-50 text-amber-800 border border-amber-200 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
               Approvals
               {pendingApprovalsCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px] flex items-center justify-center">
+                <span className="w-4 h-4 rounded-full bg-amber-500 text-white font-bold text-[10px] flex items-center justify-center shadow-sm">
                   {pendingApprovalsCount}
                 </span>
               )}
@@ -162,10 +161,10 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab("audit")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === "audit"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
               }`}
             >
               <Shield className="w-3.5 h-3.5" />
@@ -175,10 +174,10 @@ export default function App() {
             {currentRole === "Admin" && (
               <button
                 onClick={() => setActiveTab("admin")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                   activeTab === "admin"
-                    ? "bg-slate-800 text-violet-400 border border-slate-700"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                    ? "bg-purple-50 text-purple-800 border border-purple-200 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <Settings className="w-3.5 h-3.5" />
@@ -242,7 +241,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 px-6 py-4 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 px-6 py-4 text-center text-xs text-slate-500 bg-white">
         GovFlow &bull; Domain-Agnostic Governed Workflow Platform &bull; Zero Domain Code Guarantee
       </footer>
     </div>
