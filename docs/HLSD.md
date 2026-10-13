@@ -277,8 +277,3 @@ Every audit entry emitted across all subsystems adheres to the following unified
 - **Cross-Tenant & Dangling References**: Relational reference queries are strictly scoped by `tenant_id` and active status.
 - **Metadata Changes on Existing Records**: Metadata schema updates are additive and non-destructive; legacy JSON payloads remain queryable without corruption.
 
----
-
-## 7. Next Steps & Phase Progression
-
-With the HLSD incorporating universal audit logging, granular state diffs, and clean high-level separation, we proceed to **Phase 2: Low-Level Design (LLD)** to define concrete DDLs, AST rule syntax, seed specifications, and code-level modules.
