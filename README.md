@@ -165,4 +165,6 @@ The system seeds and runs two business domains using declarative JSON configurat
 ## 5. Documentation Structure
 - [**docs/HLSD.md**](docs/HLSD.md): High-Level System Design (Component separation, sequence diagrams, audit logging).
 - [**docs/LLD.md**](docs/LLD.md): Low-Level Design (Database DDLs, AST rule syntax, atomic SQLite concurrency locks, edge cases).
+- [**docs/BACKEND_ARCHITECTURE.md**](docs/BACKEND_ARCHITECTURE.md): Deep-dive into Backend APIs, CORS & transport guards, core infrastructure modules, security & RBAC projection, workflow state engine, and JSON seed loading.
+- [**docs/FRONTEND_ARCHITECTURE.md**](docs/FRONTEND_ARCHITECTURE.md): Deep-dive into Frontend architecture, Dynamic Form builder, Dynamic Table, Record Detail timeline, Approvals inbox, Dashboard widgets, Audit explorer, and Admin Studio.
 - [**docs/DEFERRED_ITEMS.md**](docs/DEFERRED_ITEMS.md): Architecture scope decisions, technical debt log, scale bottlenecks, and future roadmap.

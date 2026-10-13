@@ -5,10 +5,17 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.core.database import init_database
 from app.scripts.seed_db import seed_database
+import os
 from app.core.config import DB_PATH
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
+    for f in [DB_PATH, f"{DB_PATH}-shm", f"{DB_PATH}-wal"]:
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+            except OSError:
+                pass
     init_database(DB_PATH)
     seed_database(DB_PATH)
 
